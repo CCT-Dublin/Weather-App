@@ -2,24 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Button, FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-// Utility function to normalise city names (removes extra spaces, capitalises each word)
-function normaliseCityName(name: string) {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
-
-function App() {
+export default function SearchScreen() {
   const [city, setCity] = useState('');
-  const [unit, setUnit] = useState('metric');
+  const [history, setHistory] = useState<string[]>([]);
+  const [error, setError] = useState('');
   const [weather, setWeather] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [history, setHistory] = useState<string[]>([]);
+  const [unit, setUnit] = useState<'metric' | 'imperial'>('metric');
   const [forecast, setForecast] = useState<any[]>([]);
 
   // Load search history on screen open
@@ -92,9 +81,8 @@ function App() {
       setError('Please enter a city name.');
       return;
     }
-    const normalisedCity = normaliseCityName(city);
-    await fetchWeather(normalisedCity);
-    const newHistory = [normalisedCity, ...history.filter(c => c.toLowerCase() !== normalisedCity.toLowerCase())];
+    await fetchWeather(city);
+    const newHistory = [city, ...history.filter(c => c.toLowerCase() !== city.toLowerCase())];
     setHistory(newHistory);
     await AsyncStorage.setItem('searchHistory', JSON.stringify(newHistory));
     setCity('');
@@ -114,9 +102,6 @@ function App() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Search Weather by City</Text>
-      <Text style={styles.notice}>
-        Note: Please do not use accents or extra spaces in city names, and mind that searches are case sensitive.
-      </Text>
       <TextInput
         style={styles.input}
         value={city}
@@ -209,12 +194,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 16,
-  },
-  notice: {
-    color: '#0056b3',
-    fontSize: 14,
-    marginBottom: 8,
-    fontStyle: 'italic',
   },
   input: {
     borderWidth: 1,
